@@ -29,12 +29,21 @@ spec:
       - name: postgres
         image: postgres:17-alpine
         env:
-        - name: POSTGRES_USER
-          value: "postgres"
-        - name: POSTGRES_PASSWORD
-          value: "postgres"
-        - name: POSTGRES_DB
-          value: "ums_db"
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: ums-secret
+                key: postgres_user
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ums-secret
+                key: postgres_password
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: ums-secret
+                key: postgres_db
         ports:
         - containerPort: 5432
         volumeMounts:
