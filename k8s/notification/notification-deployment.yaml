@@ -17,5 +17,6 @@ spec:
       containers:
         - name: notification
           image: yuliyaswork/notification:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8001

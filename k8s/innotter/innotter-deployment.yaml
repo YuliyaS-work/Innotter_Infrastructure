@@ -17,5 +17,6 @@ spec:
       containers:
         - name: innotter
           image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8002
