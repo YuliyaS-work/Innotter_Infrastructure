@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ums-redis
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ums-redis
+  template:
+    metadata:
+      labels:
+        app: ums-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        command: ["redis-server", "--bind", "0.0.0.0", "--requirepass", "testredispass", "--appendonly", "yes"]
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ums-redis-service
+  namespace: app
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: ums-redis
