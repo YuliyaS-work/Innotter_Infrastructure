@@ -17,5 +17,10 @@ spec:
         - name: ums
           image: yuliyaswork/ums:latest
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: ums-config
+            - secretRef:
+                name: ums-secret
           ports:
             - containerPort: 8000
