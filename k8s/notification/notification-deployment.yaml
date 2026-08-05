@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app:
+          notification
+    spec:
+      containers:
+        - name: notification
+          image: yuliyaswork/notification:latest
+          ports:
+            - containerPort: 8001

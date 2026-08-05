@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: app
+spec:
+  rules:
+    - host: app.local
+      http:
+        paths:
+          - path: /ums
+            pathType: Prefix
+            backend:
+              service:
+                name: ums-service
+                port:
+                  number: 8000
+          - path: /notification
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8001
+          - path: /innotter
+            pathType: Prefix
+            backend:
+              service:
+                name: innotter-service
+                port:
+                  number: 8002
