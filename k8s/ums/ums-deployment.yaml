@@ -13,6 +13,15 @@ spec:
       labels:
         app: ums
     spec:
+      initContainers:
+        - name: run-migrations
+          image: yuliyaswork/ums-service:latest
+          command: [ "alembic", "upgrade", "head" ]
+          envFrom:
+            - configMapRef:
+                name: ums-config
+            - secretRef:
+                name: ums-secret
       containers:
         - name: ums
           image: yuliyaswork/ums:latest
