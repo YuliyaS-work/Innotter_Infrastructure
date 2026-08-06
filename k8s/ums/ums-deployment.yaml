@@ -15,7 +15,8 @@ spec:
     spec:
       initContainers:
         - name: run-migrations
-          image: yuliyaswork/ums-service:latest
+          image: yuliyaswork/ums:latest
+          imagePullPolicy: IfNotPresent
           command: [ "alembic", "upgrade", "head" ]
           envFrom:
             - configMapRef:
@@ -25,7 +26,7 @@ spec:
       containers:
         - name: ums
           image: yuliyaswork/ums:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: ums-config
