@@ -38,6 +38,11 @@ spec:
           volumeMounts:
             - name: mongodb-data
               mountPath: /bitnami/mongodb
+          env:
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: notification-mongodb-service
+            - name: MONGODB_ADVERTISED_PORT_NUMBER
+              value: "27017"
       volumes:
         - name: mongodb-data
           persistentVolumeClaim:
