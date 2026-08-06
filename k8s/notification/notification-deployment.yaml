@@ -11,12 +11,16 @@ spec:
   template:
     metadata:
       labels:
-        app:
-          notification
+        app: notification
     spec:
       containers:
         - name: notification
           image: yuliyaswork/notification:latest
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: notification-config
+            - secretRef:
+                name: notification-secret
           ports:
             - containerPort: 8001
