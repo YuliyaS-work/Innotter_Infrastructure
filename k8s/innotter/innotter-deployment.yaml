@@ -32,7 +32,7 @@ spec:
                 name: innotter-secret
 
         - name: migrate
-          image: yuliyaswork/innoter:latest
+          image: yuliyaswork/innotter:latest
           command: [ "python", "manage.py", "migrate" ]
           envFrom:
             - configMapRef:
