@@ -39,12 +39,12 @@ spec:
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:
-                  name: innotter-config
+                  name: innotter-secret
                   key: DB_NAME
             - name: MYSQL_USER
               valueFrom:
                 configMapKeyRef:
-                  name: innotter-config
+                  name: innotter-secret
                   key: DB_USER
             - name: MYSQL_PASSWORD
               valueFrom:
