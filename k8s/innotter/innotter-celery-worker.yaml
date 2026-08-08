@@ -21,7 +21,7 @@ spec:
       containers:
         - name: celery-worker
           image: yuliyaswork/innotter:latest
-          command: ["python", "-m", "celery", "-A", "config", "worker", "-l", "info"]
+          command: ["python", "-m", "celery", "-A", "config", "worker", "-l", "info", "--concurrency=2"]
           envFrom:
             - secretRef:
                 name: innotter-secret
@@ -29,8 +29,8 @@ spec:
                 name: innotter-config
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: "200m"
+              memory: "512Mi"
             limits:
               cpu: "500m"
-              memory: "512Mi"
+              memory: "1Gi"
