@@ -43,5 +43,10 @@ spec:
         - name: innotter
           image: yuliyaswork/innotter:latest
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: innotter-config
+            - secretRef:
+                name: innotter-secret
           ports:
             - containerPort: 8002
