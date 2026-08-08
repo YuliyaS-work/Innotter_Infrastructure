@@ -23,7 +23,7 @@ spec:
           command: [ 'sh', '-c', 'until nc -z rabbitmq-service 5672; do sleep 1; done' ]
 
         - name: collectstatic
-          image: yuliyaswork/innoter:latest
+          image: yuliyaswork/innotter:latest
           command: [ "python", "manage.py", "collectstatic", "--noinput" ]
           envFrom:
             - configMapRef:
