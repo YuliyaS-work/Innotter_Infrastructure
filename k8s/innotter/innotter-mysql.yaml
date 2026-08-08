@@ -35,22 +35,22 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: innotter-secret
-                  key: MYSQL_PASSWORD
+                  key: DB_PASSWORD
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: innotter-config
-                  key: MYSQL_DATABASE
+                  key: DB_NAME
             - name: MYSQL_USER
               valueFrom:
                 configMapKeyRef:
                   name: innotter-config
-                  key: MYSQL_USER
+                  key: DB_USER
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: innotter-secret
-                  key: MYSQL_PASSWORD
+                  key: DB_PASSWORD
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
