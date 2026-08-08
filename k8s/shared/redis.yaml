@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ums-redis
+  name: redis
   namespace: app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ums-redis
+      app: redis
   template:
     metadata:
       labels:
-        app: ums-redis
+        app: redis
     spec:
       containers:
         - name: redis
@@ -29,10 +29,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ums-redis-service
+  name: redis-service
   namespace: app
 spec:
   ports:
   - port: 6379
   selector:
-    app: ums-redis
+    app: redis
