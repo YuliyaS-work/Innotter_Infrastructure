@@ -33,17 +33,17 @@ spec:
           command: [ "alembic", "upgrade", "head" ]
           envFrom:
             - configMapRef:
-              name: ums-config
+                name: ums-config
             - secretRef:
-              name: ums-secret
+                name: ums-secret
       containers:
         - name: ums
           image: yuliyaswork/ums:latest
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-              name: ums-config
+                name: ums-config
             - secretRef:
-              name: ums-secret
+                name: ums-secret
       ports:
         - containerPort: 8000
