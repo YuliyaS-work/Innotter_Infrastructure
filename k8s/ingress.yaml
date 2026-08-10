@@ -3,22 +3,20 @@ kind: Ingress
 metadata:
   name: app-ingress
   namespace: app
-  annotations:
-  nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
     - host: app.local
       http:
         paths:
-          - path: /ums(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /ums
+            pathType: Prefix
             backend:
               service:
                 name: ums-service
                 port:
                   number: 8000
-          - path: /innotter(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /innotter
+            pathType: Prefix
             backend:
               service:
                 name: innotter-service
