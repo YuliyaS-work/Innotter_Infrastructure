@@ -15,13 +15,13 @@ spec:
                 name: ums-service
                 port:
                   number: 8000
-          - path: /notification
-            pathType: Prefix
-            backend:
-              service:
-                name: notification-service
-                port:
-                  number: 8001
+#          - path: /notification
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: notification-service
+#                port:
+#                  number: 8001
           - path: /innotter
             pathType: Prefix
             backend:

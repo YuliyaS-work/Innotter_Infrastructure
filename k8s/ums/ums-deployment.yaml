@@ -45,5 +45,5 @@ spec:
                 name: ums-config
             - secretRef:
                 name: ums-secret
-      ports:
-        - containerPort: 8000
+          ports:
+            - containerPort: 8000
