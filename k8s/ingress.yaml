@@ -4,6 +4,10 @@ metadata:
   name: app-ingress
   namespace: app
 spec:
+  tls:
+    - hosts:
+        - app.local
+      secretName: app-local-tls
   rules:
     - host: app.local
       http:
