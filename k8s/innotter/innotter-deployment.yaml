@@ -13,6 +13,10 @@ spec:
       labels:
         app: innotter
     spec:
+      volumes:
+        - name: static-volume
+          emptyDir: { }
+
       initContainers:
         - name: wait-for-mysql
           image: busybox
@@ -30,6 +34,9 @@ spec:
                 name: innotter-config
             - secretRef:
                 name: innotter-secret
+          volumeMounts:
+            - name: static-volume
+              mountPath: /app/staticfiles
 
         - name: migrate
           image: yuliyaswork/innotter:latest
@@ -50,3 +57,6 @@ spec:
                 name: innotter-secret
           ports:
             - containerPort: 8002
+          volumeMounts:
+            - name: static-volume
+              mountPath: /app/staticfiles
