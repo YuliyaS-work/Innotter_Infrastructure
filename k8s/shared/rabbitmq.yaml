@@ -27,6 +27,8 @@ spec:
               value: "guest"
             - name: RABBITMQ_DEFAULT_PASS
               value: "guest"
+            - name: RABBITMQ_VM_MEMORY_HIGH_WATERMARK_RELATIVE
+              value: "0.8"
           volumeMounts:
             - name: rabbitmq-data
               mountPath: /var/lib/rabbitmq
@@ -45,13 +47,13 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
 
-#          resources:
-#            requests:
-#              cpu: "100m"
-#              memory: "256Mi"
-#            limits:
-#              cpu: "500m"
-#              memory: "512Mi"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 
   volumeClaimTemplates:
     - metadata:
