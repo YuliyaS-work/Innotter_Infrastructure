@@ -59,8 +59,8 @@ spec:
 
             - name: MONGODB_REPLICA_SET_KEY
               valueFrom:
-                secretKeyRef:
-                  name: notification-secret
+                configMapRef:
+                  name: notification-config
                   key: MONGODB_REPLICA_SET_KEY
 
             - name: MONGODB_ADVERTISED_HOSTNAME
