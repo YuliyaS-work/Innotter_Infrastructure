@@ -8,30 +8,140 @@ spec:
   selector:
     matchLabels:
       app: notification
+
   template:
     metadata:
       labels:
         app: notification
+
     spec:
       restartPolicy: Always
 
       initContainers:
         - name: wait-for-rabbitmq
           image: busybox:1.36
-          command: [ 'sh', '-c', 'until nc -z rabbitmq-service 5672; do sleep 1; done' ]
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for RabbitMQ..."
+              until nc -z rabbitmq-service 5672; do
+                sleep 2
+              done
+              echo "RabbitMQ is available."
 
-        - name: wait-for-mongodb
-          image: busybox:1.36
-          command: [ 'sh', '-c', 'until nc -z notification-mongodb-service 27017; do sleep 1; done' ]
+        - name: wait-for-mongodb-primary
+          image: mongo:8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGODB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: notification-secret
+                  key: MONGODB_ROOT_PASSWORD
+          command:
+            - bash
+            - -ec
+            - |
+              echo "Waiting for MongoDB PRIMARY..."
+
+              until mongosh \
+                --host notification-mongodb-0.notification-mongodb-headless.app.svc.cluster.local:27017 \
+                -u root \
+                -p "$MONGODB_ROOT_PASSWORD" \
+                --authenticationDatabase admin \
+                --quiet \
+                --eval "rs.status().myState === 1" \
+                2>/dev/null | grep -q true
+              do
+                echo "MongoDB is not PRIMARY yet..."
+                sleep 2
+              done
+
+              echo "MongoDB PRIMARY is ready."
 
       containers:
         - name: notification
           image: yuliyaswork/notification:latest
           imagePullPolicy: Always
+
           envFrom:
             - configMapRef:
                 name: notification-config
             - secretRef:
                 name: notification-secret
+
           ports:
-            - containerPort: 8001
+            - name: http
+              containerPort: 8001
+
+          readinessProbe:
+            tcpSocket:
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+
+          livenessProbe:
+            tcpSocket:
+              port: 8001
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: app
+spec:
+  selector:
+    app: notification
+  ports:
+    - name: http
+      port: 8001
+      targetPort: 8001
+  type: NodePort
+
+
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: notification
+#  namespace: app
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: notification
+#  template:
+#    metadata:
+#      labels:
+#        app: notification
+#    spec:
+#      restartPolicy: Always
+#
+#      initContainers:
+#        - name: wait-for-rabbitmq
+#          image: busybox:1.36
+#          command: [ 'sh', '-c', 'until nc -z rabbitmq-service 5672; do sleep 1; done' ]
+#
+#        - name: wait-for-mongodb
+#          image: busybox:1.36
+#          command: [ 'sh', '-c', 'until nc -z notification-mongodb-service 27017; do sleep 1; done' ]
+#
+#      containers:
+#        - name: notification
+#          image: yuliyaswork/notification:latest
+#          imagePullPolicy: Always
+#          envFrom:
+#            - configMapRef:
+#                name: notification-config
+#            - secretRef:
+#                name: notification-secret
+#          ports:
+#            - containerPort: 8001

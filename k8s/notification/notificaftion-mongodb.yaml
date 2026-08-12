@@ -1,52 +1,109 @@
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: Service
 metadata:
-  name: notification-mongodb-pvc
+  name: notification-mongodb-headless
   namespace: app
 spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+  clusterIP: None
+  selector:
+    app: notification-mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: notification-mongodb
   namespace: app
 spec:
+  serviceName: notification-mongodb-headless
   replicas: 1
+
   selector:
     matchLabels:
       app: notification-mongodb
+
   template:
     metadata:
       labels:
         app: notification-mongodb
+
     spec:
+      terminationGracePeriodSeconds: 30
+
       containers:
         - name: mongodb
-          image: bitnami/mongodb:latest
+          image: bitnami/mongodb:8.0
+          imagePullPolicy: IfNotPresent
+
           ports:
-            - containerPort: 27017
-          envFrom:
-            - secretRef:
-                name: notification-secret
-            - configMapRef:
-                name: notification-config
+            - name: mongodb
+              containerPort: 27017
+
+          env:
+            - name: MONGODB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: notification-secret
+                  key: MONGODB_ROOT_PASSWORD
+
+            - name: MONGODB_REPLICA_SET_MODE
+              value: "primary"
+
+            - name: MONGODB_REPLICA_SET_NAME
+              value: "rs0"
+
+            - name: MONGODB_REPLICA_SET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-secret
+                  key: MONGODB_REPLICA_SET_KEY
+
+            - name: MONGODB_ADVERTISED_HOSTNAME
+              value: "notification-mongodb-0.notification-mongodb-headless.app.svc.cluster.local"
+
+            - name: MONGODB_ADVERTISED_PORT_NUMBER
+              value: "27017"
+
           volumeMounts:
             - name: mongodb-data
               mountPath: /bitnami/mongodb
-          env:
-            - name: MONGODB_ADVERTISED_HOSTNAME
-              value: notification-mongodb-service
-            - name: MONGODB_ADVERTISED_PORT_NUMBER
-              value: "27017"
+
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  mongosh \
+                    -u root \
+                    -p "$MONGODB_ROOT_PASSWORD" \
+                    --authenticationDatabase admin \
+                    --quiet \
+                    --eval "rs.status().myState === 1" \
+                    | grep -q true
+
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+
+          livenessProbe:
+            tcpSocket:
+              port: 27017
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+
       volumes:
         - name: mongodb-data
           persistentVolumeClaim:
             claimName: notification-mongodb-pvc
+
 ---
 apiVersion: v1
 kind: Service
@@ -57,5 +114,70 @@ spec:
   selector:
     app: notification-mongodb
   ports:
-    - port: 27017
+    - name: mongodb
+      port: 27017
       targetPort: 27017
+  type: ClusterIP
+
+
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: notification-mongodb-pvc
+#  namespace: app
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 1Gi
+#---
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: notification-mongodb
+#  namespace: app
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: notification-mongodb
+#  template:
+#    metadata:
+#      labels:
+#        app: notification-mongodb
+#    spec:
+#      containers:
+#        - name: mongodb
+#          image: bitnami/mongodb:latest
+#          ports:
+#            - containerPort: 27017
+#          envFrom:
+#            - secretRef:
+#                name: notification-secret
+#            - configMapRef:
+#                name: notification-config
+#          volumeMounts:
+#            - name: mongodb-data
+#              mountPath: /bitnami/mongodb
+#          env:
+#            - name: MONGODB_ADVERTISED_HOSTNAME
+#              value: notification-mongodb-service
+#            - name: MONGODB_ADVERTISED_PORT_NUMBER
+#              value: "27017"
+#      volumes:
+#        - name: mongodb-data
+#          persistentVolumeClaim:
+#            claimName: notification-mongodb-pvc
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: notification-mongodb-service
+#  namespace: app
+#spec:
+#  selector:
+#    app: notification-mongodb
+#  ports:
+#    - port: 27017
+#      targetPort: 27017
