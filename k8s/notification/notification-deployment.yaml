@@ -32,7 +32,7 @@ spec:
               echo "RabbitMQ is available."
 
         - name: wait-for-mongodb-primary
-          image: mongo:latest
+          image: mongodb:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: MONGODB_ROOT_PASSWORD
