@@ -18,31 +18,25 @@ kind: StatefulSet
 metadata:
   name: notification-mongodb
   namespace: app
-
 spec:
   serviceName: notification-mongodb-headless
   replicas: 1
-
   selector:
     matchLabels:
       app: notification-mongodb
-
   template:
     metadata:
       labels:
         app: notification-mongodb
-
     spec:
       terminationGracePeriodSeconds: 30
 
       containers:
         - name: mongodb
           image: bitnami/mongodb:latest
-
           ports:
             - name: mongodb
               containerPort: 27017
-
           env:
             - name: MONGODB_ROOT_PASSWORD
               valueFrom:

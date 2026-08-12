@@ -55,7 +55,6 @@ spec:
         - name: notification
           image: yuliyaswork/notification:latest
           imagePullPolicy: Always
-
           envFrom:
             - configMapRef:
                 name: notification-config

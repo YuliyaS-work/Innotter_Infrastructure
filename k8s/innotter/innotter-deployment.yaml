@@ -28,6 +28,7 @@ spec:
 
         - name: collectstatic
           image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
           command: [ "python", "manage.py", "collectstatic", "--noinput" ]
           envFrom:
             - configMapRef:
@@ -40,12 +41,14 @@ spec:
 
         - name: migrate
           image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
           command: [ "python", "manage.py", "migrate" ]
           envFrom:
             - configMapRef:
                 name: innotter-config
             - secretRef:
                 name: innotter-secret
+
       containers:
         - name: innotter
           image: yuliyaswork/innotter:latest
@@ -60,3 +63,17 @@ spec:
           volumeMounts:
             - name: static-volume
               mountPath: /app/staticfiles
+
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+            livenessProbe:
+              httpGet:
+                path: /health/
+                port: 8002
+              initialDelaySeconds: 20
+              periodSeconds: 20
