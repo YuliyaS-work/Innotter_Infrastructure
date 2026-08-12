@@ -5,8 +5,8 @@ metadata:
   namespace: app
 spec:
   selector:
-      app: ums
+    app: ums
   ports:
     - port: 8000
       targetPort: 8000
-  type: NodePort
+  type: ClusterIP

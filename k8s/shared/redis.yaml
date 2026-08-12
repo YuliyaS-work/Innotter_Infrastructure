@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis
   namespace: app
 spec:
+  serviceName: redis-service
   replicas: 1
   selector:
     matchLabels:
@@ -15,16 +16,56 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:latest
+          image: redis:7-alpine
           env:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: ums-secret
                   key: redis_password
-          command: [ "sh", "-c", "redis-server --bind 0.0.0.0 --requirepass \"$REDIS_PASSWORD\" --appendonly yes" ]
+          command: ["sh", "-c", "redis-server --bind 0.0.0.0 --requirepass \"$REDIS_PASSWORD\" --appendonly yes"]
           ports:
             - containerPort: 6379
+              name: redis
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping | grep PONG
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping | grep PONG
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
