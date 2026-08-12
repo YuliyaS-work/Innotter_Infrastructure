@@ -67,31 +67,16 @@ spec:
               mountPath: /bitnami/mongodb
 
           readinessProbe:
-            exec:
-              command:
-                - /bin/bash
-                - -ec
-                - |
-                  mongosh \
-                    -u root \
-                    -p "$MONGODB_ROOT_PASSWORD" \
-                    --authenticationDatabase admin \
-                    --quiet \
-                    --eval "rs.status().myState === 1" \
-                    | grep -q true
-
-            initialDelaySeconds: 15
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 12
-
-          livenessProbe:
             tcpSocket:
               port: 27017
-            initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 6
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+            livenessProbe:
+              tcpSocket:
+                port: 27017
+              initialDelaySeconds: 20
+              periodSeconds: 10
 
   volumeClaimTemplates:
     - metadata:
