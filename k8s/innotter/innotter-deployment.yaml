@@ -71,9 +71,9 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
 
-            livenessProbe:
-              httpGet:
-                path: /innotter/health/
-                port: 8002
-              initialDelaySeconds: 20
-              periodSeconds: 20
+          livenessProbe:
+            httpGet:
+              path: /innotter/health/
+              port: 8002
+            initialDelaySeconds: 20
+            periodSeconds: 20
