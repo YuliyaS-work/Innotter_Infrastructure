@@ -37,7 +37,7 @@ spec:
 
       containers:
         - name: mongodb
-          image: bitnami/mongodb:8.0
+          image: bitnami/mongodb:latest
           imagePullPolicy: IfNotPresent
 
           ports:
