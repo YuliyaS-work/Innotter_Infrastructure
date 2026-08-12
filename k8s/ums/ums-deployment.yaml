@@ -50,18 +50,18 @@ spec:
 
           readinessProbe:
             httpGet:
-              path: /system/health
+              path: /ums/system/health
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
 
-            livenessProbe:
-              httpGet:
-                path: /system/health
-                port: 8000
-              initialDelaySeconds: 15
-              periodSeconds: 20
-              timeoutSeconds: 3
-              failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ums/system/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
