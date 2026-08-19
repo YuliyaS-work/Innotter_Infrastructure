@@ -1,8 +1,23 @@
 podTemplate(
     containers: [
-        containerTemplate(name: 'terraform', image: 'hashicorp/terraform:1.9.0', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl:1.29.2', command: 'cat', ttyEnabled: true),
-        containerTemplate(name: 'python', image: 'python:3.12', command: 'cat', ttyEnabled: true)
+        containerTemplate(
+            name: 'terraform',
+            image: 'hashicorp/terraform:1.9.0',
+            command: 'cat', ttyEnabled: true
+        ),
+        containerTemplate(
+            name: 'kubectl',
+            image: 'dtzar/helm-kubectl:latest',
+            command: 'sleep',
+            args: 'infinity',
+            ttyEnabled: true
+        ),
+        containerTemplate(
+            name: 'python',
+            image: 'python:3.12',
+            command: 'cat',
+            ttyEnabled: true
+        )
     ]
 ) {
     node(POD_LABEL) {
