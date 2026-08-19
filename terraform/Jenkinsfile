@@ -2,7 +2,7 @@ podTemplate(
     containers: [
         containerTemplate(
             name: 'terraform',
-            image: 'ghcr.io/antonbabenko/terraform:latest',
+            image: 'alpine/terragrunt',
             command: 'sleep',
             args: 'infinity',
             ttyEnabled: true
