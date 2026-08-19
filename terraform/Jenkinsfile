@@ -16,6 +16,8 @@ podTemplate(
         stage('Build Lambda ZIP') {
             container('python') {
                 sh '''
+                    apt-get update && apt-get install -y zip
+
                     cd terraform/localstack/lambda
 
                     rm -rf build
