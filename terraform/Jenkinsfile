@@ -1,7 +1,8 @@
 podTemplate(
     containers: [
         containerTemplate(name: 'terraform', image: 'hashicorp/terraform:1.9.0'),
-        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl')
+        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl'),
+        containerTemplate(name: 'python', image: 'python:3.12')
     ]
 ) {
     node(POD_LABEL) {
@@ -12,15 +13,55 @@ podTemplate(
             }
         }
 
-        stage('Apply Terraform') {
+        stage('Build Lambda ZIP') {
+            container('python') {
+                sh '''
+                    cd terraform/localstack/lambda
+
+                    rm -rf build
+                    mkdir build
+
+                    pip install -r requirements.txt -t build/
+                    cp lambda_resize.py build/
+
+                    find build -name "__pycache__" -type d -exec rm -rf {} +
+                    find build -name "*.pyc" -delete
+
+                    cd build
+                    zip -r ../lambda_resize.zip .
+                '''
+            }
+        }
+
+        stage('Archive Lambda ZIP') {
+            archiveArtifacts artifacts: 'terraform/localstack/lambda/lambda_resize.zip', fingerprint: true
+        }
+
+        stage('Terraform Plan') {
             container('terraform') {
                 dir('terraform/localstack') {
                     sh '''
                         terraform init
-                        terraform apply -auto-approve
+                        terraform plan -out=tfplan
                     '''
                 }
             }
         }
+
+        stage('Archive Terraform Plan') {
+            archiveArtifacts artifacts: 'terraform/localstack/tfplan', fingerprint: true
+        }
+
+
+        stage('Apply Terraform') {
+            container('terraform') {
+                dir('terraform/localstack') {
+                    sh '''
+                    terraform apply -auto-approve tfplan
+                    '''
+                }
+            }
+        }
+
     }
 }

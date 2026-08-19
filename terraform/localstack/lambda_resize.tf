@@ -1,3 +1,4 @@
+# IAM Role for Lambda
 resource "aws_iam_role" "lambda_resize_role" {
   name = "lambda-resize-role"
 
@@ -13,23 +14,15 @@ resource "aws_iam_role" "lambda_resize_role" {
   })
 }
 
-resource "null_resource" "zip_lambda_resize" {
-  provisioner "local-exec" {
-    command = <<EOT
-      cd ${path.module}/lambda && \
-      pip install -r requirements.txt -t . && \
-      zip -r ../lambda_resize.zip lambda_resize.py .
-    EOT
-  }
-}
-
+# Lambda Function
 resource "aws_lambda_function" "lambda_resize" {
   function_name = "lambda-resize-avatar"
   role          = aws_iam_role.lambda_resize_role.arn
   handler       = "lambda_resize.lambda_handler"
   runtime       = "python3.12"
 
-  filename      = "${path.module}/lambda_resize.zip"
+  filename         = "${path.module}/lambda_resize.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_resize.zip")
 
   environment {
     variables = {
@@ -38,12 +31,21 @@ resource "aws_lambda_function" "lambda_resize" {
     }
   }
 
-  depends_on = [
-    null_resource.zip_lambda_resize
-  ]
+  vpc_config {
+    subnet_ids         = [aws_subnet.lambda_subnet_a.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
 }
 
-# permissions for s3 to call lambda
+# Lambda Alias (dev)
+resource "aws_lambda_alias" "lambda_resize_dev" {
+  name             = "dev"
+  function_name    = aws_lambda_function.lambda_resize.function_name
+  function_version = aws_lambda_function.lambda_resize.version
+}
+
+
+# Lambda Permission for S3
 resource "aws_lambda_permission" "allow_s3_resize" {
   statement_id  = "AllowExecutionFromS3"
   action        = "lambda:InvokeFunction"
@@ -52,7 +54,8 @@ resource "aws_lambda_permission" "allow_s3_resize" {
   source_arn    = aws_s3_bucket.raw.arn
 }
 
-# s3 event
+
+# S3 Event Notification → Lambda
 resource "aws_s3_bucket_notification" "raw_bucket_notification" {
   bucket = aws_s3_bucket.raw.id
 
@@ -67,7 +70,7 @@ resource "aws_s3_bucket_notification" "raw_bucket_notification" {
   ]
 }
 
-# IAM policy for Lambda‑resize
+# IAM Policy for Lambda S3 Access
 resource "aws_iam_role_policy" "lambda_resize_s3_policy" {
   role = aws_iam_role.lambda_resize_role.id
 
@@ -90,10 +93,4 @@ resource "aws_iam_role_policy" "lambda_resize_s3_policy" {
       }
     ]
   })
-}
-
-# vpc settings
-vpc_config {
-  subnet_ids         = [aws_subnet.lambda_subnet_a.id]
-  security_group_ids = [aws_security_group.lambda_sg.id]
 }
