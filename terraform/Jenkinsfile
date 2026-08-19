@@ -16,7 +16,7 @@ podTemplate(
         ),
         containerTemplate(
             name: 'python',
-            image: 'python:3.12',
+            image: 'python:3.12-slim',
             command: 'cat',
             ttyEnabled: true
         )
@@ -69,6 +69,9 @@ podTemplate(
             container('terraform') {
                 dir('terraform/localstack') {
                     sh '''
+                        nslookup registry.terraform.io || echo "DNS failed"
+                        wget -qO- https://registry.terraform.io/.well-known/terraform.json || echo "HTTP request failed"
+
                         terraform init
                         terraform plan -out=tfplan
                     '''
