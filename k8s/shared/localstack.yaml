@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: localstack
+  template:
+    metadata:
+      labels:
+        app: localstack
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:latest
+          env:
+            - name: SERVICES
+              value: "s3,lambda"
+            - name: DEBUG
+              value: "1"
+          ports:
+            - containerPort: 4566
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: localstack
+  namespace: app
+spec:
+  selector:
+    app: localstack
+  ports:
+    - name: api
+      protocol: TCP
+      port: 4566
+      targetPort: 4566
+    - name: ui
+      protocol: TCP
+      port: 8090
+      targetPort: 8080

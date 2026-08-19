@@ -1,0 +1,26 @@
+podTemplate(
+    containers: [
+        containerTemplate(name: 'terraform', image: 'hashicorp/terraform:1.9.0'),
+        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl')
+    ]
+) {
+    node(POD_LABEL) {
+
+        stage('Checkout Infra Repo') {
+            container('kubectl') {
+                git branch: 'feature/terraform', credentialsId: 'github-token', url: 'https://github.com/YuliyaS-work/Innotter_Infrastructure.git'
+            }
+        }
+
+        stage('Apply Terraform') {
+            container('terraform') {
+                dir('terraform/localstack') {
+                    sh '''
+                        terraform init
+                        terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
+    }
+}
