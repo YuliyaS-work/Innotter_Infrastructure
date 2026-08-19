@@ -1,8 +1,8 @@
 podTemplate(
     containers: [
-        containerTemplate(name: 'terraform', image: 'hashicorp/terraform:1.9.0'),
-        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl'),
-        containerTemplate(name: 'python', image: 'python:3.12')
+        containerTemplate(name: 'terraform', image: 'hashicorp/terraform:1.9.0', command: 'cat', ttyEnabled: true),
+        containerTemplate(name: 'kubectl', image: 'bitnami/kubectl', command: 'cat', ttyEnabled: true),
+        containerTemplate(name: 'python', image: 'python:3.12', command: 'cat', ttyEnabled: true)
     ]
 ) {
     node(POD_LABEL) {
@@ -37,6 +37,15 @@ podTemplate(
             archiveArtifacts artifacts: 'terraform/localstack/lambda/lambda_resize.zip', fingerprint: true
         }
 
+         stage('Start LocalStack') {
+            container('kubectl') {
+                sh '''
+                    kubectl apply -f k8s/shared/localstack.yaml --validate=false
+                    kubectl rollout status deployment/localstack -n app --timeout=90s
+                '''
+            }
+        }
+
         stage('Terraform Plan') {
             container('terraform') {
                 dir('terraform/localstack') {
@@ -57,7 +66,7 @@ podTemplate(
             container('terraform') {
                 dir('terraform/localstack') {
                     sh '''
-                    terraform apply -auto-approve tfplan
+                        terraform apply -auto-approve tfplan
                     '''
                 }
             }
