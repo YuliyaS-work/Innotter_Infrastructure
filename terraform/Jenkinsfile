@@ -1,27 +1,33 @@
 podTemplate(
+    volumes: [
+        emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
+    ],
     containers: [
         containerTemplate(
             name: 'terraform',
             image: 'alpine/terragrunt',
             command: 'sleep',
             args: 'infinity',
-            ttyEnabled: true
+            ttyEnabled: true,
+            volumeMounts: [volumeMount(mountPath: '/home/jenkins/agent', name: 'workspace-volume')]
         ),
         containerTemplate(
             name: 'kubectl',
             image: 'dtzar/helm-kubectl:latest',
             command: 'sleep',
             args: 'infinity',
-            ttyEnabled: true
+            ttyEnabled: true,
+            volumeMounts: [volumeMount(mountPath: '/home/jenkins/agent', name: 'workspace-volume')]
         ),
         containerTemplate(
             name: 'python',
             image: 'python:3.12-slim',
             command: 'cat',
-            ttyEnabled: true
+            ttyEnabled: true,
+            volumeMounts: [volumeMount(mountPath: '/home/jenkins/agent', name: 'workspace-volume')]
         )
     ]
-) {
+){
     node(POD_LABEL) {
 
         stage('Checkout Infra Repo') {
@@ -47,7 +53,7 @@ podTemplate(
                     find build -name "*.pyc" -delete
 
                     cd build
-                    zip -r ../../lambda_resize.zip .
+                    zip -r /home/jenkins/agent/workspace/terraform-pipeline/terraform/localstack/lambda/lambda_resize.zip .
                 '''
             }
         }
