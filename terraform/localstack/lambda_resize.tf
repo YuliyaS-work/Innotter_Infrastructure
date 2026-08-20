@@ -94,12 +94,7 @@ resource "aws_iam_role_policy" "lambda_resize_s3_policy" {
     ]
   })
 }
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-}
+
 
 # Lambda Function
 resource "aws_lambda_function" "lambda_resize" {
