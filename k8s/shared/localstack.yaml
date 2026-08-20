@@ -23,6 +23,8 @@ spec:
               value: "1"
             - name: DOCKER_HOST
               value: "tcp://localhost:2375"
+            - name: PERSISTENCE
+              value: "1"
           ports:
             - containerPort: 4566
             - containerPort: 8080
@@ -33,6 +35,9 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+          volumeMounts:
+            - name: localstack-data
+              mountPath: /var/lib/localstack
 
         - name: dind
           image: docker:24-dind
@@ -48,6 +53,12 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+
+      volumes:
+        - name: localstack-data
+          hostPath:
+            path: /data/localstack
+            type: DirectoryOrCreate
 
 ---
 apiVersion: v1
