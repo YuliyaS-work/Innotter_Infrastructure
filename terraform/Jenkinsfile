@@ -7,19 +7,21 @@ podTemplate(
             name: 'terraform',
             image: 'alpine/terragrunt',
             command: 'sleep',
-            args: 'infinity'
+            args: 'infinity',
+            ttyEnabled: true,
         ),
         containerTemplate(
             name: 'kubectl',
             image: 'dtzar/helm-kubectl:latest',
             command: 'sleep',
-            args: 'infinity'
+            args: 'infinity',
+            ttyEnabled: true,
         ),
         containerTemplate(
             name: 'python',
             image: 'python:3.12-slim',
             command: 'cat',
-            args: 'infinity'
+            ttyEnabled: true,
         )
     ]
 ){
