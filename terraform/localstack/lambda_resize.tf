@@ -20,6 +20,7 @@ resource "aws_lambda_function" "lambda_resize" {
   role          = aws_iam_role.lambda_resize_role.arn
   handler       = "lambda_resize.lambda_handler"
   runtime       = "python3.10"
+  timeout       = 30
 
   filename         = "${path.module}/lambda_resize.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda_resize.zip")
