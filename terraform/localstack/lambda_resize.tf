@@ -19,7 +19,7 @@ resource "aws_lambda_function" "lambda_resize" {
   function_name = "lambda-resize-avatar"
   role          = aws_iam_role.lambda_resize_role.arn
   handler       = "lambda_resize.lambda_handler"
-  runtime       = "python3.12"
+  runtime       = "python3.10"
 
   filename         = "${path.module}/lambda_resize.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda_resize.zip")
