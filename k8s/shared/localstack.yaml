@@ -25,6 +25,8 @@ spec:
               value: "tcp://localhost:2375"
             - name: PERSISTENCE
               value: "1"
+            - name: LAMBDA_CONTAINER_STARTUP_TIMEOUT
+              value: "120"
           ports:
             - containerPort: 4566
             - containerPort: 8080
