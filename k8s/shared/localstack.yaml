@@ -18,7 +18,7 @@ spec:
           image: localstack/localstack:3.0.2
           env:
             - name: SERVICES
-              value: "s3,lambda,iam,sts"
+              value: "s3,lambda,iam,sts,ec2"
             - name: DEBUG
               value: "1"
           ports:

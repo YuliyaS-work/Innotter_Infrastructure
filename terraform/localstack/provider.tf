@@ -13,5 +13,6 @@ provider "aws" {
     lambda   = "http://localstack.app.svc.cluster.local:4566"
     iam      = "http://localstack.app.svc.cluster.local:4566"
     sts      = "http://localstack.app.svc.cluster.local:4566"
+    ec2      = "http://localstack.app.svc.cluster.local:4566"
   }
 }
