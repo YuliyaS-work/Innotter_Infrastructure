@@ -23,6 +23,8 @@ spec:
               value: "1"
             - name: LAMBDA_EXECUTOR
               value: "local"
+            - name: LS_LAMBDA_LEGACY
+              value: "1"
           ports:
             - containerPort: 4566
             - containerPort: 8080
