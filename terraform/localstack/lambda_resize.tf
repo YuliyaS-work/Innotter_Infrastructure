@@ -7,16 +7,6 @@ resource "aws_iam_role" "lambda_resize_role" {
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
-
-# IAM Role for Lambda
-resource "aws_iam_role" "lambda_resize_role" {
-  name = "lambda-resize-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
       Principal = {
         Service = "lambda.amazonaws.com"
       }
