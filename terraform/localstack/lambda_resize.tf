@@ -6,7 +6,9 @@ resource "aws_iam_role" "lambda_resize_role" {
     Version = "2012-10-17"
     Statement = [{
       Action = "sts:AssumeRole"
-      Effect = "Allow"# IAM Role for Lambda
+      Effect = "Allow"
+
+# IAM Role for Lambda
 resource "aws_iam_role" "lambda_resize_role" {
   name = "lambda-resize-role"
 
