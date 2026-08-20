@@ -50,13 +50,13 @@ podTemplate(
                     find build -name "*.pyc" -delete
 
                     cd build
-                    zip -r /home/jenkins/agent/workspace/terraform-pipeline/terraform/localstack/lambda/lambda_resize.zip .
+                    zip -r /home/jenkins/agent/workspace/terraform-pipeline/terraform/localstack/lambda_resize.zip .
                 '''
             }
         }
 
         stage('Archive Lambda ZIP') {
-            archiveArtifacts artifacts: 'terraform/localstack/lambda/lambda_resize.zip', fingerprint: true
+            archiveArtifacts artifacts: 'terraform/localstack/lambda_resize.zip', fingerprint: true
         }
 
          stage('Start LocalStack') {
