@@ -12,7 +12,6 @@ provider "aws" {
   secret_key = "test"
   region     = "eu-central-1"
 
-  s3_force_path_style = true
 
   endpoints {
     s3     = "http://localstack:4566"
