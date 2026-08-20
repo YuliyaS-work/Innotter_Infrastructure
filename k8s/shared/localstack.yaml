@@ -21,6 +21,8 @@ spec:
               value: "s3,lambda,iam,sts,ec2"
             - name: DEBUG
               value: "1"
+            - name: LAMBDA_EXECUTOR
+              value: "local"
           ports:
             - containerPort: 4566
             - containerPort: 8080
