@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: localstack
-          image: localstack/localstack:3.0.2
+          image: localstack/localstack:2.2
           env:
             - name: SERVICES
               value: "s3,lambda,iam,sts,ec2"
