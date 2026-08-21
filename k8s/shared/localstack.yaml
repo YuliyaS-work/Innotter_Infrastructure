@@ -13,9 +13,10 @@ spec:
       labels:
         app: localstack
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: localstack
-          image: localstack/localstack:2.2
+          image: gresau/localstack-persist:2.2
           env:
             - name: SERVICES
               value: "s3,lambda,iam,sts,ec2"
@@ -23,12 +24,12 @@ spec:
               value: "1"
             - name: DOCKER_HOST
               value: "tcp://localhost:2375"
-            - name: PERSISTENCE
-              value: "1"
             - name: LOCALSTACK_HOST
               value: "172.17.0.1:4566"
             - name: LAMBDA_CONTAINER_STARTUP_TIMEOUT
               value: "120"
+            - name: PERSIST_FREQUENCY
+              value: "10"
           ports:
             - containerPort: 4566
             - containerPort: 8080
@@ -41,7 +42,7 @@ spec:
               cpu: "1000m"
           volumeMounts:
             - name: localstack-data
-              mountPath: /var/lib/localstack
+              mountPath: /persisted-data
 
         - name: dind
           image: docker:24-dind
