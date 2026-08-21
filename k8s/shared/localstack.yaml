@@ -32,6 +32,8 @@ spec:
               value: "120"
             - name: PERSIST_FREQUENCY
               value: "10"
+            - name: DOCKER_BRIDGE_IP
+              value: "172.17.0.1"
           ports:
             - containerPort: 4566
             - containerPort: 8080
