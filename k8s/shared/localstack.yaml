@@ -1,3 +1,35 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: localstack-sa
+  namespace: app
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: localstack-role
+  namespace: app
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: localstack-rb
+  namespace: app
+subjects:
+  - kind: ServiceAccount
+    name: localstack-sa
+roleRef:
+  kind: Role
+  name: localstack-role
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,6 +45,7 @@ spec:
       labels:
         app: localstack
     spec:
+      serviceAccountName: localstack-sa
       terminationGracePeriodSeconds: 60
       containers:
         - name: localstack
@@ -22,21 +55,17 @@ spec:
               value: "s3,lambda,iam,sts,ec2"
             - name: DEBUG
               value: "1"
-            - name: DOCKER_HOST
-              value: "tcp://localhost:2375"
-            - name: LOCALSTACK_HOST
-              value: "172.17.0.1:4566"
-            - name: LOCALSTACK_HOSTNAME
-              value: "172.17.0.1"
-            - name: LAMBDA_CONTAINER_STARTUP_TIMEOUT
-              value: "120"
+
+            - name: LAMBDA_RUNTIME_EXECUTOR
+              value: "kubernetes"
+
             - name: PERSIST_FREQUENCY
               value: "10"
-            - name: DOCKER_BRIDGE_IP
-              value: "172.17.0.1"
+
           ports:
             - containerPort: 4566
             - containerPort: 8080
+
           resources:
             requests:
               memory: "512Mi"
@@ -44,31 +73,16 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+
           volumeMounts:
             - name: localstack-data
               mountPath: /persisted-data
-
-        - name: dind
-          image: docker:24-dind
-          securityContext:
-            privileged: true
-          env:
-            - name: DOCKER_TLS_CERTDIR
-              value: ""
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
 
       volumes:
         - name: localstack-data
           hostPath:
             path: /data/localstack
             type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service

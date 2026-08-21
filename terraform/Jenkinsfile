@@ -24,18 +24,21 @@ podTemplate(
             ttyEnabled: true,
         )
     ]
-){
+) {
     node(POD_LABEL) {
 
         stage('Checkout Infra Repo') {
             container('kubectl') {
-                git branch: 'feature/terraform', credentialsId: 'github-token', url: 'https://github.com/YuliyaS-work/Innotter_Infrastructure.git'
+                git branch: 'feature/terraform',
+                    credentialsId: 'github-token',
+                    url: 'https://github.com/YuliyaS-work/Innotter_Infrastructure.git'
             }
         }
 
         stage('Build Lambda ZIP') {
             container('python') {
                 sh '''
+                    set -e
                     apt-get update && apt-get install -y zip
 
                     cd terraform/localstack/lambda
@@ -50,7 +53,7 @@ podTemplate(
                     find build -name "*.pyc" -delete
 
                     cd build
-                    zip -r /home/jenkins/agent/workspace/terraform-pipeline/terraform/localstack/lambda_resize.zip .
+                    zip -r "$WORKSPACE/terraform/localstack/lambda_resize.zip" .
                 '''
             }
         }
@@ -59,9 +62,10 @@ podTemplate(
             archiveArtifacts artifacts: 'terraform/localstack/lambda_resize.zip', fingerprint: true
         }
 
-         stage('Start LocalStack') {
+        stage('Start LocalStack') {
             container('kubectl') {
                 sh '''
+                    set -e
                     kubectl apply -f k8s/shared/localstack.yaml --validate=false
                     kubectl rollout status deployment/localstack -n app --timeout=90s
                 '''
@@ -72,10 +76,13 @@ podTemplate(
             container('terraform') {
                 dir('terraform/localstack') {
                     sh '''
-                        nslookup registry.terraform.io || echo "DNS failed"
-                        wget -qO- https://registry.terraform.io/.well-known/terraform.json || echo "HTTP request failed"
+                        set -e
 
-                        terraform init
+                        export LOCALSTACK_HOST=localstack.app.svc.cluster.local
+                        export AWS_ENDPOINT_URL="http://$LOCALSTACK_HOST:4566"
+                        export TF_VAR_localstack_endpoint="$AWS_ENDPOINT_URL"
+
+                        terraform init -backend=false
                         terraform plan -out=tfplan
                     '''
                 }
@@ -86,11 +93,16 @@ podTemplate(
             archiveArtifacts artifacts: 'terraform/localstack/tfplan', fingerprint: true
         }
 
-
         stage('Apply Terraform') {
             container('terraform') {
                 dir('terraform/localstack') {
                     sh '''
+                        set -e
+
+                        export LOCALSTACK_HOST=localstack.app.svc.cluster.local
+                        export AWS_ENDPOINT_URL="http://$LOCALSTACK_HOST:4566"
+                        export TF_VAR_localstack_endpoint="$AWS_ENDPOINT_URL"
+
                         terraform apply -auto-approve tfplan
                     '''
                 }
