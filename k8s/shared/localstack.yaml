@@ -26,6 +26,8 @@ spec:
               value: "tcp://localhost:2375"
             - name: LOCALSTACK_HOST
               value: "172.17.0.1:4566"
+            - name: LOCALSTACK_HOSTNAME
+              value: "172.17.0.1"
             - name: LAMBDA_CONTAINER_STARTUP_TIMEOUT
               value: "120"
             - name: PERSIST_FREQUENCY
