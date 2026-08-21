@@ -49,7 +49,7 @@ podTemplate(
                     find build -name "*.pyc" -delete
 
                     cd build
-                    zip -r ../lambda_resize.zip .
+                    zip -r ../../lambda_resize.zip .
                 '''
             }
         }
