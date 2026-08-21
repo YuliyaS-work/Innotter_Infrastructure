@@ -16,10 +16,11 @@ podTemplate(
         ),
         containerTemplate(
             name: 'python',
-            image: 'python:3.12-slim',
+            image: 'public.ecr.aws/sam/build-python3.10:latest',
             command: 'sleep',
             args: 'infinity',
-            ttyEnabled: true
+            ttyEnabled: true,
+            user: 'root'
         )
     ]
 ) {
@@ -35,7 +36,7 @@ podTemplate(
             container('python') {
                 sh '''
                     set -e
-                    apt-get update && apt-get install -y zip
+                    yum install -y zip || true
 
                     cd terraform/localstack/lambda
 

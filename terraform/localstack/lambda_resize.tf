@@ -22,6 +22,8 @@ resource "aws_lambda_function" "lambda_resize" {
   runtime       = "python3.10"
   timeout       = 30
 
+  publish = true
+
   filename         = "${path.module}/lambda_resize.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda_resize.zip")
 
