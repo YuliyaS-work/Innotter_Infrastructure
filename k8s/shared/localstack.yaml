@@ -1,8 +1,3 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: app
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,63 +20,76 @@ spec:
         - name: localstack
           image: gresau/localstack-persist:3.1
           imagePullPolicy: IfNotPresent
+
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "Waiting for Docker-in-Docker daemon to start..."
+              while ! curl -s http://127.0.0.1:2375/info >/dev/null 2>&1; do
+                sleep 1
+              done
+              echo "Docker is up! Starting LocalStack..."
+              exec /usr/local/bin/docker-entrypoint.sh
+
           env:
             - name: DEBUG
               value: "1"
             - name: SERVICES
               value: "s3,lambda,iam,sts,ec2"
-
             - name: DOCKER_HOST
-              value: "unix:///var/run/docker.sock"
-            - name: TMPDIR
-              value: "/data/localstack/tmp"
-            - name: HOST_TMP_FOLDER
-              value: "/data/localstack/tmp"
+              value: "tcp://127.0.0.1:2375"
+
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
 
             - name: LOCALSTACK_HOST
-              value: "localstack.app.svc.cluster.local"
+              value: "$(POD_IP)"
+            - name: LOCALSTACK_HOSTNAME
+              value: "$(POD_IP)"
+
+            - name: HOSTNAME_FROM_LAMBDA
+              value: "172.17.0.1"
+
+            - name: LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT
+              value: "120"
+            - name: TMPDIR
+              value: "/data/localstack/tmp"
 
           ports:
             - containerPort: 4566
               name: edge
 
           volumeMounts:
-            - name: docker-sock
-              mountPath: /var/run/docker.sock
-
             - name: localstack-data
               mountPath: /persisted-data
-
             - name: localstack-tmp
               mountPath: /data/localstack/tmp
 
-      volumes:
-        - name: docker-sock
-          hostPath:
-            path: /var/run/docker.sock
-            type: Socket
+        - name: dind
+          image: docker:24-dind
+          securityContext:
+            privileged: true
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          volumeMounts:
+            - name: localstack-tmp
+              mountPath: /data/localstack/tmp
+            - name: docker-data
+              mountPath: /var/lib/docker
 
+      volumes:
         - name: localstack-data
           hostPath:
             path: /data/localstack/data
             type: DirectoryOrCreate
-
         - name: localstack-tmp
           hostPath:
             path: /data/localstack/tmp
             type: DirectoryOrCreate
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: localstack
-  namespace: app
-spec:
-  type: ClusterIP
-  selector:
-    app: localstack
-  ports:
-    - name: api
-      protocol: TCP
-      port: 4566
-      targetPort: edge
+        - name: docker-data
+          hostPath:
+            path: /data/localstack/docker
+            type: DirectoryOrCreate

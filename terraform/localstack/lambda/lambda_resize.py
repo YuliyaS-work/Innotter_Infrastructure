@@ -1,15 +1,20 @@
 import os
+import urllib.parse
 
 import boto3
 from PIL import Image
 import io
 
 def lambda_handler(event, context):
-    s3 = boto3.client("s3", endpoint_url="http://localstack:4566")
+    endpoint_url = "http://172.17.0.1:4566"
+    s3 = boto3.client("s3", endpoint_url=endpoint_url)
 
-    source_bucket = event["source_bucket"]
-    target_bucket = event["target_bucket"]
-    key = event["key"]
+    source_bucket = event['Records'][0]['s3']['bucket']['name']
+    key = event['Records'][0]['s3']['object']['key']
+
+    key = urllib.parse.unquote_plus(key)
+
+    target_bucket ="avatars-processed"
 
     obj = s3.get_object(Bucket=source_bucket, Key=key)
     img_data = obj["Body"].read()
