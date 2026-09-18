@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: innotter
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: innotter
+  template:
+    metadata:
+      labels:
+        app: innotter
+    spec:
+      volumes:
+        - name: static-volume
+          emptyDir: { }
+
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z innotter-mysql-service 3306; do sleep 1; done' ]
+
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          command: [ 'sh', '-c', 'until nc -z rabbitmq-service 5672; do sleep 1; done' ]
+
+        - name: collectstatic
+          image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
+          command: [ "python", "manage.py", "collectstatic", "--noinput" ]
+          envFrom:
+            - configMapRef:
+                name: innotter-config
+            - secretRef:
+                name: innotter-secret
+          volumeMounts:
+            - name: static-volume
+              mountPath: /app/staticfiles
+
+        - name: migrate
+          image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
+          command: [ "python", "manage.py", "migrate" ]
+          envFrom:
+            - configMapRef:
+                name: innotter-config
+            - secretRef:
+                name: innotter-secret
+
+      containers:
+        - name: innotter
+          image: yuliyaswork/innotter:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: innotter-config
+            - secretRef:
+                name: innotter-secret
+          ports:
+            - containerPort: 8002
+          volumeMounts:
+            - name: static-volume
+              mountPath: /app/staticfiles
+
+          readinessProbe:
+            httpGet:
+              path: /innotter/health/
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /innotter/health/
+              port: 8002
+            initialDelaySeconds: 20
+            periodSeconds: 20

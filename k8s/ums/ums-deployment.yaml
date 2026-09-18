@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ums
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ums
+  template:
+    metadata:
+      labels:
+        app: ums
+    spec:
+      restartPolicy: Always
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command: [ 'sh', '-c', 'until nc -z ums-postgres-service 5432; do sleep 1; done' ]
+
+        - name: wait-for-redis
+          image: busybox:1.36
+          command: [ 'sh', '-c', 'until nc -z redis-service 6379; do sleep 1; done' ]
+
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          command: [ 'sh', '-c', 'until nc -z rabbitmq-service 5672; do sleep 1; done' ]
+
+        - name: run-migrations
+          image: yuliyaswork/ums:latest
+          imagePullPolicy: Always
+          command: [ "alembic", "upgrade", "head" ]
+          envFrom:
+            - configMapRef:
+                name: ums-config
+            - secretRef:
+                name: ums-secret
+      containers:
+        - name: ums
+          image: yuliyaswork/ums:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: ums-config
+            - secretRef:
+                name: ums-secret
+          ports:
+            - containerPort: 8000
+
+          readinessProbe:
+            httpGet:
+              path: /ums/system/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /ums/system/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3

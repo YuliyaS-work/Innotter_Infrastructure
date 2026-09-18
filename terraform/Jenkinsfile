@@ -1,0 +1,128 @@
+podTemplate(
+    containers: [
+        containerTemplate(
+            name: 'terraform',
+            image: 'hashicorp/terraform:latest',
+            command: '/bin/sh',
+            args: '-c "sleep infinity"',
+            ttyEnabled: true
+        ),
+        containerTemplate(
+            name: 'kubectl',
+            image: 'dtzar/helm-kubectl:latest',
+            command: 'sleep',
+            args: 'infinity',
+            ttyEnabled: true
+        ),
+        containerTemplate(
+            name: 'python',
+            image: 'public.ecr.aws/sam/build-python3.10:latest',
+            command: 'sleep',
+            args: 'infinity',
+            ttyEnabled: true,
+            user: 'root'
+        )
+    ]
+) {
+    node(POD_LABEL) {
+
+        stage('Checkout Infra Repo') {
+            git branch: 'feature/terraform',
+                credentialsId: 'github-token',
+                url: 'https://github.com/YuliyaS-work/Innotter_Infrastructure.git'
+        }
+
+        stage('Build Lambda ZIP') {
+            container('python') {
+                sh '''
+                    set -e
+                    yum install -y zip || true
+
+                    cd terraform/localstack/lambda
+
+                    rm -rf build
+                    mkdir build
+
+                    pip install --upgrade pip
+
+                    pip install \
+                        --platform manylinux2014_x86_64 \
+                        --target=build/ \
+                        --implementation cp \
+                        --python-version 3.10 \
+                        --only-binary=:all: \
+                        --upgrade \
+                        -r requirements.txt
+
+                    cp lambda_resize.py build/
+
+                    find build -name "__pycache__" -type d -exec rm -rf {} +
+                    find build -name "*.pyc" -delete
+
+                    cd build
+                    zip -r ../../lambda_resize.zip .
+                '''
+            }
+        }
+
+        stage('Archive Lambda ZIP') {
+            archiveArtifacts artifacts: 'terraform/localstack/lambda_resize.zip', fingerprint: true
+        }
+
+        stage('Start LocalStack') {
+            container('kubectl') {
+                sh '''
+                    set -e
+                    kubectl apply -f k8s/shared/localstack.yaml
+                    kubectl rollout status deployment/localstack -n app --timeout=180s
+                '''
+            }
+        }
+
+        stage('Terraform Plan') {
+            container('terraform') {
+                dir('terraform/localstack') {
+                    sh '''
+                        set -e
+
+                        export AWS_ACCESS_KEY_ID="test"
+                        export AWS_SECRET_ACCESS_KEY="test"
+                        export AWS_REGION="us-east-1"
+
+                        export LOCALSTACK_HOST="localstack.app.svc.cluster.local"
+                        export AWS_ENDPOINT_URL="http://$LOCALSTACK_HOST:4566"
+                        export TF_VAR_localstack_endpoint="$AWS_ENDPOINT_URL"
+
+                        terraform init
+                        terraform plan -out=tfplan
+                    '''
+                }
+            }
+        }
+
+        stage('Archive Terraform Plan') {
+            archiveArtifacts artifacts: 'terraform/localstack/tfplan', fingerprint: true
+        }
+
+        stage('Apply Terraform') {
+            container('terraform') {
+                dir('terraform/localstack') {
+                    sh '''
+                        set -e
+
+                        export AWS_ACCESS_KEY_ID="test"
+                        export AWS_SECRET_ACCESS_KEY="test"
+                        export AWS_REGION="us-east-1"
+
+                        export LOCALSTACK_HOST="localstack.app.svc.cluster.local"
+                        export AWS_ENDPOINT_URL="http://$LOCALSTACK_HOST:4566"
+
+                        export TF_VAR_localstack_endpoint="$AWS_ENDPOINT_URL"
+
+                        terraform apply -auto-approve tfplan
+                    '''
+                }
+            }
+        }
+    }
+}
